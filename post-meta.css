@@ -1,0 +1,56 @@
+/* Post Meta admin styles */
+
+.post-meta-sortable {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.post-meta-field-row {
+  position: relative;
+  padding: 8px 8px 8px 32px;
+  margin-bottom: 4px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  background: #fff;
+}
+
+.post-meta-field-row:hover {
+  border-color: #dcdcde;
+  background: #f9f9f9;
+}
+
+.post-meta-drag-handle {
+  position: absolute;
+  left: 6px;
+  top: 14px;
+  cursor: grab;
+  color: #b4b9be;
+  font-size: 20px;
+  line-height: 1;
+  user-select: none;
+}
+
+.post-meta-drag-handle:hover {
+  color: #50575e;
+}
+
+.post-meta-drag-handle:active {
+  cursor: grabbing;
+}
+
+.post-meta-sortable-placeholder {
+  border: 1px dashed #dcdcde;
+  background: #f0f0f1;
+  border-radius: 2px;
+  margin-bottom: 4px;
+  height: 40px;
+}
+
+
+.ui-sortable-helper {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid #dcdcde;
+  border-radius: 2px;
+}
