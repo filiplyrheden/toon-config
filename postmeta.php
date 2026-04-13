@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Post Meta
  * Description: Custom post meta fields defined via post-meta.toon
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 
 require __DIR__ . '/repeater.php';
@@ -28,7 +28,21 @@ function post_meta_get_ordered_sections($section_map, $group_slug)
 
 if (is_admin()) :
 
-  $post_meta_model = parse_toon_file(get_template_directory() . '/postmeta/post-meta.toon');
+  $toon_path       = get_template_directory() . '/postmeta/post-meta.toon';
+  $post_meta_model = parse_toon_file($toon_path);
+
+  if ($post_meta_model === false) :
+    add_action('admin_notices', function () use ($toon_path) {
+      $rel = str_replace(ABSPATH, '', $toon_path);
+      echo '<div class="notice notice-warning"><p>';
+      printf(
+        /* translators: %s: relative file path */
+        __('<strong>Post Meta:</strong> Filen <code>%s</code> saknas i temat. Skapa filen för att aktivera anpassade fält.', 'postmeta'),
+        esc_html($rel)
+      );
+      echo '</p></div>';
+    });
+  endif;
 
   if ($post_meta_model) :
 
