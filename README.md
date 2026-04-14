@@ -1,33 +1,96 @@
-# Post Meta
+# Toon Config
 
-A WordPress plugin for defining and managing custom post meta fields via a `.toon` configuration file kept in your theme.
+A WordPress plugin for defining custom post meta fields and custom post types via `.toon` configuration files kept in your theme.
+
+**How it works:** The plugin reads two optional config files from your active theme at runtime. The theme owns all configuration; the plugin stays generic and can be shared across projects without modification.
+
+| Config file | What it does |
+|---|---|
+| `{theme}/postmeta/post-meta.toon` | Registers metaboxes with custom fields in the post editor |
+| `{theme}/cpt-toon/post-types.toon` | Registers custom post types |
+
+Both files are optional — the plugin loads gracefully if either is missing.
 
 ## Installation
 
-1. Place the `postmeta` folder in `wp-content/plugins/`
+1. Place the `toon-config` folder in `wp-content/plugins/`
 2. Activate the plugin in **WP Admin → Plugins**
-3. Create `postmeta/post-meta.toon` inside your theme (see configuration below)
+3. Create `postmeta/post-meta.toon` inside your theme to add meta fields (see below)
+4. Optionally create `cpt-toon/post-types.toon` inside your theme to register custom post types (see below)
 
-The plugin reads field definitions from `{theme}/postmeta/post-meta.toon` at runtime, so the theme owns the configuration and the plugin stays generic.
+## About the .toon format
 
-## Theme integration
+`.toon` files use a simple indentation-based syntax. Two rules cover most of it:
 
-Use `post_meta_get_ordered_sections()` in your templates to render sections in the user-defined order:
+- Indentation creates nesting (like YAML)
+- `[N]:` at the start of a line declares that N items follow
 
-```php
-$section_map = [
-    'hero_image' => 'partials/front/hero-image',
-    'intro_text' => 'partials/front/intro-text',
-];
+The full syntax is shown in the examples below.
 
-foreach (post_meta_get_ordered_sections($section_map, 'front-page') as $field_name) {
-    get_template_part($section_map[$field_name]);
-}
+---
+
+## Custom post types — cpt-toon/post-types.toon
+
+Create `{theme}/cpt-toon/post-types.toon` to register custom post types. Adding a row is all that is needed — no PHP required.
+
+### File format
+
+The file is a single columnar table. The first line declares the column names and row count; each subsequent non-empty line is one post type.
+
+```
+[N]{post_type,label,singular,menu_icon,public,has_archive,show_in_rest,supports}:
+  slug,Plural label,Singular label,dashicons-icon,1,1,1,"title,editor,thumbnail"
 ```
 
-The second argument must match the group slug (the group name lowercased and hyphenated, e.g. `"Front page"` → `"front-page"`).
+Values that contain commas (e.g. the `supports` list) must be wrapped in double-quotes.
 
-## Configuration — post-meta.toon
+### Column reference
+
+| Column | Required | Description |
+|---|---|---|
+| `post_type` | yes | The post type slug, e.g. `services`. Must be unique. |
+| `label` | yes | Plural display name shown in the admin menu, e.g. `Services` |
+| `singular` | yes | Singular display name used in button labels, e.g. `Service` |
+| `menu_icon` | no | Dashicons class or URL, e.g. `dashicons-store` |
+| `public` | no | `1` to make the post type publicly accessible, `0` to hide it |
+| `has_archive` | no | `1` to enable an archive page at `/{post_type}/` |
+| `show_in_rest` | no | `1` to enable the block editor and REST API support |
+| `supports` | no | Comma-separated list of features: `title,editor,thumbnail`, etc. Wrap in quotes if more than one value. |
+
+`public`, `has_archive`, and `show_in_rest` treat any non-empty value as truthy — use `1` to enable and `0` (or leave blank) to disable.
+
+### Example
+
+```
+[2]{post_type,label,singular,menu_icon,public,has_archive,show_in_rest,supports}:
+  services,Services,Service,dashicons-store,1,1,1,"title,editor,thumbnail"
+  team,Team,Team member,dashicons-groups,1,0,1,"title,thumbnail,excerpt"
+```
+
+### After adding a post type
+
+Go to **WP Admin → Settings → Permalinks** and click **Save Changes**. This flushes WordPress rewrite rules so the new post type's URLs work correctly.
+
+### Querying a custom post type in templates
+
+```php
+$query = new WP_Query([
+    'post_type'      => 'services',
+    'posts_per_page' => -1,
+    'orderby'        => 'menu_order',
+    'order'          => 'ASC',
+]);
+
+while ($query->have_posts()) {
+    $query->the_post();
+    the_title();
+}
+wp_reset_postdata();
+```
+
+---
+
+## Meta fields — postmeta/post-meta.toon
 
 Field groups are defined in `{theme}/postmeta/post-meta.toon`. The file starts with a list count declaration and contains one or more groups.
 
@@ -61,7 +124,7 @@ Field groups are defined in `{theme}/postmeta/post-meta.toon`. The file starts w
 | `image` | Image picker (stores attachment ID) |
 | `repeater` | Repeatable group of subfields |
 
-`rich_text` and `tinymce` are interchangeable. Both render the full WordPress visual editor (TinyMCE) and save content through `wp_kses_post`. Use whichever name reads more clearly in your `.toon` file.
+`rich_text` and `tinymce` are interchangeable. Both render the full WordPress visual editor and save content through `wp_kses_post`. Use whichever name reads more clearly in your `.toon` file.
 
 Repeater fields require a `subfields` definition with columns `type`, `name`, and `label`.
 
@@ -105,38 +168,59 @@ Repeater fields require a `subfields` definition with columns `type`, `name`, an
         label: About hero
 ```
 
-## Retrieving field values in templates
+---
 
-Fields are stored as standard WordPress post meta. To avoid key collisions between groups, all fields are **prefixed with their group slug** when saved to the database.
+## Theme integration
 
-The group slug is the group name lowercased and hyphenated — the same value used in `post_meta_get_ordered_sections()`.
+### Rendering fields in order
+
+Use `post_meta_get_ordered_sections()` to render sections in the user-defined drag-drop order:
+
+```php
+$section_map = [
+    'hero_image' => 'partials/front/hero-image',
+    'intro_text' => 'partials/front/intro-text',
+];
+
+foreach (post_meta_get_ordered_sections($section_map, 'front-page') as $field_name) {
+    get_template_part($section_map[$field_name]);
+}
+```
+
+The second argument must match the group slug: the group name lowercased and hyphenated (e.g. `"Front page"` → `"front-page"`).
+
+### Retrieving field values
+
+Fields are stored as standard WordPress post meta. To avoid key collisions between groups, all fields are **prefixed with their group slug** when saved.
 
 | Group name | Field name | Database key |
 |---|---|---|
 | `Front page` | `intro_text` | `front-page_intro_text` |
 | `About` | `about_hero` | `about_about_hero` |
 
-Use the helper function `post_meta_get()` to avoid writing the prefix manually:
+Use the helper function to retrieve a value without writing the prefix manually:
+
 ```php
 // post_meta_get( $group, $field, $post_id = null )
-$intro = post_meta_get('front page', 'intro_text');
+$intro = post_meta_get('Front page', 'intro_text');
 ```
 
 Or use `get_post_meta()` directly with the full prefixed key:
+
 ```php
 // Scalar field
-$intro = get_post_meta(get_the_ID(), 'front_page_intro_text', true);
+$intro = get_post_meta(get_the_ID(), 'front-page_intro_text', true);
 
-// rich_text / tinymce field (HTML content — echo without escaping)
-$body = get_post_meta(get_the_ID(), 'front_page_intro_text', true);
+// rich_text / tinymce field (HTML content)
+$body = get_post_meta(get_the_ID(), 'front-page_intro_text', true);
 echo wp_kses_post($body);
 
 // Image field (stores attachment ID)
-$image_id = get_post_meta(get_the_ID(), 'front_page_hero_image', true);
+$image_id = get_post_meta(get_the_ID(), 'front-page_hero_image', true);
 echo wp_get_attachment_image($image_id, 'full');
 
 // Repeater field (stores array of rows)
-$contacts = get_post_meta(get_the_ID(), 'front_page_contacts', true);
+$contacts = get_post_meta(get_the_ID(), 'front-page_contacts', true);
 foreach ($contacts as $contact) {
     echo esc_html($contact['name']);
     echo esc_html($contact['email']);

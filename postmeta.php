@@ -1,12 +1,13 @@
 <?php
 /*
- * Plugin Name: Post Meta
- * Description: Custom post meta fields defined via post-meta.toon
- * Version: 1.0.1
+ * Plugin Name: Toon Config
+ * Description: Define custom post meta fields and custom post types via .toon config files in your theme.
+ * Version: 1.1.0
  */
 
 require __DIR__ . '/repeater.php';
 require __DIR__ . '/toon.php';
+require __DIR__ . '/post-types.php';
 
 /**
  * Returns field names in saved order, filtered to only known keys.
@@ -26,6 +27,22 @@ function post_meta_get_ordered_sections($section_map, $group_slug)
     : array_keys($section_map);
 }
 
+/**
+ * Retrieve a single post meta field value by group and field name.
+ * Builds the prefixed key automatically from the group slug.
+ *
+ * @param string   $group    The group name as defined in post-meta.toon (e.g. 'Front page')
+ * @param string   $field    The field name as defined in post-meta.toon (e.g. 'hero_image')
+ * @param int|null $post_id  Optional post ID. Defaults to the current post in the loop.
+ * @return mixed
+ */
+function post_meta_get($group, $field, $post_id = null)
+{
+  $post_id = $post_id ?? get_the_ID();
+  $slug    = sanitize_title($group);
+  return get_post_meta($post_id, $slug . '_' . $field, true);
+}
+
 if (is_admin()) :
 
   $toon_path       = get_template_directory() . '/postmeta/post-meta.toon';
@@ -37,7 +54,7 @@ if (is_admin()) :
       echo '<div class="notice notice-warning"><p>';
       printf(
         /* translators: %s: relative file path */
-        __('<strong>Post Meta:</strong> Filen <code>%s</code> saknas i temat. Skapa filen för att aktivera anpassade fält.', 'postmeta'),
+        __('<strong>Toon Config:</strong> The file <code>%s</code> is missing from your theme. Create it to enable custom meta fields.', 'toon-config'),
         esc_html($rel)
       );
       echo '</p></div>';
@@ -125,9 +142,9 @@ if (is_admin()) :
                 print '<img src="' . esc_url($image_src) . '" style="max-width:150px;display:block;" />';
               endif;
               print '</div>';
-              print '<button type="button" class="button post-meta-upload-image" data-input="' . esc_attr($name) . '">' . ($image_src ? __('Change image', 'postmeta') : __('Choose image', 'postmeta')) . '</button>';
+              print '<button type="button" class="button post-meta-upload-image" data-input="' . esc_attr($name) . '">' . ($image_src ? __('Change image', 'toon-config') : __('Choose image', 'toon-config')) . '</button>';
               if ($image_src) :
-                print ' <button type="button" class="button post-meta-remove-image" data-input="' . esc_attr($name) . '">' . __('Remove', 'postmeta') . '</button>';
+                print ' <button type="button" class="button post-meta-remove-image" data-input="' . esc_attr($name) . '">' . __('Remove', 'toon-config') . '</button>';
               endif;
               print '</div>';
             elseif ($type == 'repeater') :

@@ -11,7 +11,6 @@
 
 function parse_toon_file($filepath)
 {
-  if (!file_exists($filepath)) return false;
   $raw = file_get_contents($filepath);
   if ($raw === false) return false;
 
