@@ -132,6 +132,14 @@ if (is_admin()) :
                 'textarea_name' => $name,
                 'textarea_rows' => $rows,
               ]);
+            elseif ($type == 'button') :
+              $field_data = is_array($field_data) ? $field_data : [];
+              $btn_label  = esc_attr($field_data['label'] ?? '');
+              $btn_url    = esc_url($field_data['url'] ?? '');
+              print '<div class="post-meta-button-field">';
+              print '<input type="text" name="' . esc_attr($name) . '[label]" placeholder="' . __('Button label', 'toon-config') . '" value="' . $btn_label . '" class="large-text" style="margin-bottom:4px;" />';
+              print '<input type="url"  name="' . esc_attr($name) . '[url]"   placeholder="' . __('Button URL', 'toon-config') . '"   value="' . $btn_url  . '" class="large-text" />';
+              print '</div>';
             elseif ($type == 'image') :
               $attachment_id = absint($field_data);
               $image_src = $attachment_id ? wp_get_attachment_image_url($attachment_id, 'thumbnail') : '';
@@ -290,6 +298,15 @@ if (is_admin()) :
               $data[] = $sanitized;
             endforeach;
             update_post_meta($post_id, $prefixed_name, $data);
+          elseif ($type === 'button') :
+            $raw = isset($_POST[$prefixed_name]) && is_array($_POST[$prefixed_name])
+              ? $_POST[$prefixed_name]
+              : [];
+            $value = [
+              'label' => sanitize_text_field($raw['label'] ?? ''),
+              'url'   => esc_url_raw($raw['url'] ?? ''),
+            ];
+            update_post_meta($post_id, $prefixed_name, $value);
           elseif (array_key_exists($prefixed_name, $_POST)) :
             if ($type === 'image') :
               $value = absint($_POST[$prefixed_name]);

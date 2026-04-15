@@ -122,6 +122,7 @@ Field groups are defined in `{theme}/postmeta/post-meta.toon`. The file starts w
 | `rich_text` | WordPress TinyMCE editor |
 | `tinymce` | Alias for `rich_text` — identical behaviour |
 | `image` | Image picker (stores attachment ID) |
+| `button` | Two inputs — a label and a URL — stored as an associative array |
 | `repeater` | Repeatable group of subfields |
 
 `rich_text` and `tinymce` are interchangeable. Both render the full WordPress visual editor and save content through `wp_kses_post`. Use whichever name reads more clearly in your `.toon` file.
@@ -138,7 +139,7 @@ Repeater fields require a `subfields` definition with columns `type`, `name`, an
     location:
       screens[1]: page
       front_page: 1
-    fields[3]:
+    fields[4]:
       -
         type: image
         name: hero_image
@@ -147,6 +148,10 @@ Repeater fields require a `subfields` definition with columns `type`, `name`, an
         type: tinymce
         name: intro_text
         label: Intro text
+      -
+        type: button
+        name: cta_button
+        label: Call to action
       -
         type: repeater
         name: contacts
@@ -224,5 +229,15 @@ $contacts = get_post_meta(get_the_ID(), 'front-page_contacts', true);
 foreach ($contacts as $contact) {
     echo esc_html($contact['name']);
     echo esc_html($contact['email']);
+}
+
+// Button field (stores ['label' => string, 'url' => string])
+$btn = get_post_meta(get_the_ID(), 'front-page_cta_button', true);
+if (!empty($btn['url'])) {
+    printf(
+        '<a href="%s">%s</a>',
+        esc_url($btn['url']),
+        esc_html($btn['label'])
+    );
 }
 ```
