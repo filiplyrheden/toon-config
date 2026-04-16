@@ -17,15 +17,17 @@ require __DIR__ . '/post-types.php';
  * @param string $group_slug   The group slug used when saving the order
  * @return array
  */
-function post_meta_get_ordered_sections($section_map, $group_slug)
-{
-  $post_id = get_the_ID();
-  $saved   = get_post_meta($post_id, 'post_meta_order_' . $group_slug, true);
+if (!function_exists('post_meta_get_ordered_sections')) :
+  function post_meta_get_ordered_sections($section_map, $group_slug)
+  {
+    $post_id = get_the_ID();
+    $saved   = get_post_meta($post_id, 'post_meta_order_' . $group_slug, true);
 
-  return (!empty($saved))
-    ? array_filter(explode(',', $saved), fn($k) => isset($section_map[$k]))
-    : array_keys($section_map);
-}
+    return (!empty($saved))
+      ? array_filter(explode(',', $saved), fn($k) => isset($section_map[$k]))
+      : array_keys($section_map);
+  }
+endif;
 
 /**
  * Retrieve a single post meta field value by group and field name.
@@ -36,16 +38,18 @@ function post_meta_get_ordered_sections($section_map, $group_slug)
  * @param int|null $post_id  Optional post ID. Defaults to the current post in the loop.
  * @return mixed
  */
-function post_meta_get($group, $field, $post_id = null)
-{
-  $post_id = $post_id ?? get_the_ID();
-  $slug    = sanitize_title($group);
-  return get_post_meta($post_id, $slug . '_' . $field, true);
-}
+if (!function_exists('post_meta_get')) :
+  function post_meta_get($group, $field, $post_id = null)
+  {
+    $post_id = $post_id ?? get_the_ID();
+    $slug    = sanitize_title($group);
+    return get_post_meta($post_id, $slug . '_' . $field, true);
+  }
+endif;
 
 if (is_admin()) :
 
-  $toon_path       = get_template_directory() . '/postmeta/post-meta.toon';
+  $toon_path = get_template_directory() . '/postmeta/post-meta.toon';
   $post_meta_model = parse_toon_file($toon_path);
 
   if ($post_meta_model === false) :
@@ -68,6 +72,7 @@ if (is_admin()) :
     /**
      * Render fields
      */
+    if (!function_exists('post_meta_boxes_html')) :
     function post_meta_boxes_html($post, $group)
     {
 
@@ -167,10 +172,12 @@ if (is_admin()) :
         print '</ul>';
       endif;
     }
+    endif; // function_exists post_meta_boxes_html
 
     /**
      * Render Meta Boxes
      */
+    if (!function_exists('post_meta_add_custom_box')) :
     function post_meta_add_custom_box()
     {
 
@@ -214,17 +221,20 @@ if (is_admin()) :
 
       endif;
     }
+    endif; // function_exists post_meta_add_custom_box
     add_action('add_meta_boxes', 'post_meta_add_custom_box');
 
     /**
      * Enqueue media uploader scripts
      */
+    if (!function_exists('post_meta_enqueue_scripts')) :
     function post_meta_enqueue_scripts()
     {
       wp_enqueue_media();
       wp_enqueue_style('post-meta', plugin_dir_url(__FILE__) . 'post-meta.css', [], null);
       wp_enqueue_script('post-meta', plugin_dir_url(__FILE__) . 'post-meta.js', ['jquery', 'jquery-ui-sortable'], null, true);
     }
+    endif; // function_exists post_meta_enqueue_scripts
     add_action('admin_enqueue_scripts', 'post_meta_enqueue_scripts');
 
     /**
@@ -256,6 +266,7 @@ if (is_admin()) :
      */
     if (is_array($post_meta_fields) && !empty($post_meta_fields)) :
 
+      if (!function_exists('post_meta_save_data')) :
       function post_meta_save_data($post_id)
       {
         global $post_meta_fields;
@@ -319,6 +330,7 @@ if (is_admin()) :
           endif;
         endforeach;
       }
+      endif; // function_exists post_meta_save_data
       add_action('save_post', 'post_meta_save_data');
 
     endif;

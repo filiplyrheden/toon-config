@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  zip:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ZIP
+        run: |
+          mkdir -p toon-config
+          rsync -a --exclude='.git' --exclude='.github' --exclude='*.md' . toon-config/
+          zip -r toon-config.zip toon-config/
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: toon-config.zip
