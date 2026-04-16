@@ -13,10 +13,11 @@ Both files are optional — the plugin loads gracefully if either is missing.
 
 ## Installation
 
-1. Place the `toon-config` folder in `wp-content/plugins/`
-2. Activate the plugin in **WP Admin → Plugins**
-3. Create `postmeta/post-meta.toon` inside your theme to add meta fields (see below)
-4. Optionally create `cpt-toon/post-types.toon` inside your theme to register custom post types (see below)
+1. Download `toon-config.zip` from the [latest release](../../releases/latest) 
+2. Place the `toon-config` folder in `wp-content/plugins/`
+3. Activate the plugin in **WP Admin → Plugins**
+4. Create `postmeta/post-meta.toon` inside your theme to add meta fields (see below)
+5. Optionally create `cpt-toon/post-types.toon` inside your theme to register custom post types (see below)
 
 ## About the .toon format
 
