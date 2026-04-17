@@ -260,9 +260,10 @@ if (is_admin()) :
         if (is_array($group_fields)) :
           foreach ($group_fields as $group_field) :
             array_push($post_meta_fields, [
-              'name'      => $group_field['name'],
-              'type'      => $group_field['type'],
-              'subfields' => $group_field['subfields'] ?? [],
+              'name'       => $group_field['name'],
+              'type'       => $group_field['type'],
+              'subfields'  => $group_field['subfields'] ?? [],
+              'options'    => $group_field['options'] ?? [],   // ← lägg till denna
               'group_slug' => sanitize_title($post_meta_group['group']),
             ]);
           endforeach;
