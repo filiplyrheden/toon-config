@@ -2,12 +2,13 @@
 /*
  * Plugin Name: Toon Config
  * Description: Define custom post meta fields and custom post types via .toon config files in your theme.
- * Version: 1.1.1
+ * Version: 1.1.2
  */
 
 require __DIR__ . '/repeater.php';
 require __DIR__ . '/toon.php';
 require __DIR__ . '/post-types.php';
+require __DIR__ . '/taxonomies.php';
 
 /**
  * Returns field names in saved order, filtered to only known keys.

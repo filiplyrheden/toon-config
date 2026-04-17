@@ -2,14 +2,15 @@
 
 A WordPress plugin for defining custom post meta fields and custom post types via `.toon` configuration files kept in your theme.
 
-**How it works:** The plugin reads two optional config files from your active theme at runtime. The theme owns all configuration; the plugin stays generic and can be shared across projects without modification.
+**How it works:** The plugin reads optional config files from your active theme at runtime. The theme owns all configuration; the plugin stays generic and can be shared across projects without modification.
 
 | Config file | What it does |
 |---|---|
 | `{theme}/postmeta/post-meta.toon` | Registers metaboxes with custom fields in the post editor |
 | `{theme}/cpt-toon/post-types.toon` | Registers custom post types |
+| `{theme}/cpt-toon/taxonomies.toon` | Registers custom taxonomies |
 
-Both files are optional — the plugin loads gracefully if either is missing.
+All files are optional — the plugin loads gracefully if any are missing.
 
 ## Installation
 
@@ -18,6 +19,7 @@ Both files are optional — the plugin loads gracefully if either is missing.
 3. Activate the plugin in **WP Admin → Plugins**
 4. Create `postmeta/post-meta.toon` inside your theme to add meta fields (see below)
 5. Optionally create `cpt-toon/post-types.toon` inside your theme to register custom post types (see below)
+6. Optionally create `cpt-toon/taxonomies.toon` inside your theme to register custom taxonomies (see below)
 
 ## About the .toon format
 
@@ -87,6 +89,80 @@ while ($query->have_posts()) {
     the_title();
 }
 wp_reset_postdata();
+```
+
+---
+
+## Custom taxonomies — cpt-toon/taxonomies.toon
+
+Create `{theme}/cpt-toon/taxonomies.toon` to register custom taxonomies. No PHP required.
+
+### File format
+
+The file is a single columnar table. The first line declares the column names and row count; each subsequent non-empty line is one taxonomy.
+
+```
+[N]{name,label,singular,slug,post_types,hierarchical,show_admin_column}:
+  slug,Plural label,Singular label,url-slug,post_type,1,1
+```
+
+Values that contain commas (e.g. a list of post types) must be wrapped in double-quotes.
+
+### Column reference
+
+| Column | Required | Description |
+|---|---|---|
+| `name` | yes | The taxonomy slug, e.g. `style`. Must be unique. |
+| `label` | yes | Plural display name, e.g. `Styles` |
+| `singular` | yes | Singular display name, e.g. `Style` |
+| `slug` | yes | URL rewrite slug, e.g. `style` |
+| `post_types` | yes | Post type(s) to attach the taxonomy to. Wrap multiple in quotes: `"post,item"` |
+| `hierarchical` | no | `1` for category-style (parent/child terms), `0` for tag-style |
+| `show_admin_column` | no | `1` to show a column for this taxonomy in the post list |
+
+### Example
+
+```
+[2]{name,label,singular,slug,post_types,hierarchical,show_admin_column}:
+  style,Styles,Style,style,item,1,1
+  genre,Genres,Genre,genre,"book,movie",1,1
+```
+
+### After adding a taxonomy
+
+Go to **WP Admin → Settings → Permalinks** and click **Save Changes** to flush rewrite rules.
+
+### Querying by taxonomy in templates
+
+```php
+$query = new WP_Query([
+    'post_type'      => 'item',
+    'posts_per_page' => -1,
+    'tax_query'      => [
+        [
+            'taxonomy' => 'style',
+            'field'    => 'slug',
+            'terms'    => 'minimalist',
+        ],
+    ],
+]);
+
+while ($query->have_posts()) {
+    $query->the_post();
+    the_title();
+}
+wp_reset_postdata();
+```
+
+Retrieve the terms assigned to a post:
+
+```php
+$terms = get_the_terms(get_the_ID(), 'style');
+if ($terms && !is_wp_error($terms)) {
+    foreach ($terms as $term) {
+        echo esc_html($term->name);
+    }
+}
 ```
 
 ---
